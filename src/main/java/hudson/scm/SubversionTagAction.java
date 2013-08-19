@@ -26,6 +26,7 @@ package hudson.scm;
 
 import hudson.Extension;
 import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Describable;
 import hudson.model.Descriptor;
@@ -37,18 +38,21 @@ import hudson.scm.SubversionSCM.SvnInfo;
 import hudson.util.CopyOnWriteMap;
 import hudson.security.Permission;
 import hudson.util.MultipartFormDataParser;
+
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.auth.ISVNAuthenticationProvider;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNCopyClient;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNCopySource;
 
 import javax.servlet.ServletException;
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
@@ -240,12 +244,16 @@ public class SubversionTagAction extends AbstractScmTagAction implements Describ
             this.comment = comment;
         }
 
+        private ISVNAuthenticationProvider createAuthenticationProvider(AbstractProject context) {
+            return Hudson.getInstance().getDescriptorByType(SubversionSCM.DescriptorImpl.class).createAuthenticationProvider(context);
+        }
+        
         @Override
         protected void perform(TaskListener listener) {
             try {
                 final SvnClientManager cm = upc!=null
                         ? new SvnClientManager(SVNClientManager.newInstance(SubversionSCM.createDefaultSVNOptions(),upc.new AuthenticationManagerImpl(listener)))
-                        : SubversionSCM.createClientManager(getBuild().getProject());
+                        : SubversionSCM.createClientManager(createAuthenticationProvider(getBuild().getProject()));
                 try {
                     for (Entry<SvnInfo, String> e : tagSet.entrySet()) {
                         PrintStream logger = listener.getLogger();

@@ -98,7 +98,7 @@ public final class SubversionChangeLogBuilder {
     public boolean run(Collection<SubversionSCM.External> externals, Result changeLog) throws IOException, InterruptedException {
         boolean changelogFileCreated = false;
 
-        final SVNClientManager manager = SubversionSCM.createSvnClientManager(build.getProject());
+        final SvnClientManager manager = SubversionSCM.createClientManager(createAuthenticationProvider(build.getProject()));
         try {
             SVNLogClient svnlc = manager.getLogClient();
             TransformerHandler th = createTransformerHandler();
